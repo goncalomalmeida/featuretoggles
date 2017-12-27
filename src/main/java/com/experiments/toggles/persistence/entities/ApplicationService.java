@@ -13,6 +13,7 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 import java.util.List;
 import java.util.UUID;
@@ -20,12 +21,13 @@ import java.util.UUID;
 @Entity
 @DynamicUpdate
 @Access(AccessType.FIELD)
-@Table(name = Toggle.TABLE_NAME)
+@Table(name = ApplicationService.TABLE_NAME, uniqueConstraints = {
+        @UniqueConstraint(name = "service_name_unique_idx", columnNames = {"name"})})
 @Getter
 @Setter
-public class Toggle {
+public class ApplicationService {
 
-    static final String TABLE_NAME = "toggles";
+    static final String TABLE_NAME = "services";
 
     @Id
     @Access(AccessType.PROPERTY)
@@ -37,7 +39,7 @@ public class Toggle {
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "toggle", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "service", fetch = FetchType.LAZY)
     private List<ApplicationServiceToggle> serviceToggles;
 
     @Version
