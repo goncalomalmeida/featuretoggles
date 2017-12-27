@@ -1,5 +1,6 @@
 package com.experiments.toggles.persistence.entities;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
@@ -10,6 +11,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import java.util.UUID;
 
 @Entity
@@ -31,4 +33,8 @@ public class Toggle {
 
     @Column(name = "description")
     private String description;
+
+    @Version
+    @Getter(AccessLevel.NONE)
+    private int version;
 }
