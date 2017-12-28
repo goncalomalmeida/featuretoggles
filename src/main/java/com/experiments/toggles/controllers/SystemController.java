@@ -2,6 +2,7 @@ package com.experiments.toggles.controllers;
 
 import com.experiments.toggles.controllers.resources.SystemRequest;
 import com.experiments.toggles.controllers.resources.SystemResponse;
+import com.experiments.toggles.controllers.resources.transformers.SystemTransformer;
 import com.experiments.toggles.persistence.entities.System;
 import com.experiments.toggles.services.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +29,6 @@ public class SystemController {
 
         final System system = systemService.create(request.getName(), request.getDescription(), request.getVersion());
 
-        return SystemResponse
-                .builder()
-                .id(system.getId())
-                .name(system.getName())
-                .description(system.getDescription())
-                .build();
+        return SystemTransformer.transform(system);
     }
 }

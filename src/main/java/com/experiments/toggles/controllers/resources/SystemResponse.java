@@ -24,4 +24,6 @@ public class SystemResponse implements Serializable {
 
     private String description;
 
+    private String version;
+
 }

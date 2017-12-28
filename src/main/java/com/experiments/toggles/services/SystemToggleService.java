@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.EntityNotFoundException;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -43,5 +45,16 @@ public class SystemToggleService {
         log.info("Associating toggle with id {} to system id {}", toggleId, systemId);
 
         return systemToggleRepository.save(systemToggle);
+    }
+
+    public List<SystemToggle> list(UUID systemUuid, String version) {
+
+        final System system = systemRepository.findByIdAndSystemVersion(systemUuid, version);
+
+        if(system == null) {
+            throw new EntityNotFoundException("System " + systemUuid + " not found");
+        }
+
+        return systemToggleRepository.findMyToggles(system);
     }
 }
