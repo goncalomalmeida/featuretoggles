@@ -1,6 +1,7 @@
 package com.experiments.toggles.persistence.entities;
 
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
@@ -21,13 +22,14 @@ import java.util.UUID;
 @Entity
 @DynamicUpdate
 @Access(AccessType.FIELD)
-@Table(name = ApplicationService.TABLE_NAME, uniqueConstraints = {
-        @UniqueConstraint(name = "service_name_unique_idx", columnNames = {"name"})})
+@Table(name = System.TABLE_NAME, uniqueConstraints = {
+        @UniqueConstraint(name = "system_name_unique_idx", columnNames = {"name"})})
 @Getter
 @Setter
-public class ApplicationService {
+@EqualsAndHashCode(of = "id")
+public class System {
 
-    static final String TABLE_NAME = "services";
+    static final String TABLE_NAME = "systems";
 
     @Id
     @Access(AccessType.PROPERTY)
@@ -36,11 +38,12 @@ public class ApplicationService {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "service", fetch = FetchType.LAZY)
-    private List<ApplicationServiceToggle> serviceToggles;
+    @OneToMany(mappedBy = "system", fetch = FetchType.LAZY)
+    private List<SystemToggle> systemToggles;
+
+    private String systemVersion;
 
     @Version
     @Getter(AccessLevel.NONE)

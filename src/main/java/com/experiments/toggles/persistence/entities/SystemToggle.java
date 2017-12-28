@@ -1,6 +1,7 @@
 package com.experiments.toggles.persistence.entities;
 
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
@@ -15,17 +16,20 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
 
 @Entity
 @DynamicUpdate
 @Access(AccessType.FIELD)
-@Table(name = ApplicationServiceToggle.TABLE_NAME)
+@Table(name = SystemToggle.TABLE_NAME, uniqueConstraints = {
+        @UniqueConstraint(name = "system_toggle_enabled_allowed_unique_idx", columnNames = {"fk_toggle", "fk_system"})})
 @Getter
 @Setter
-public class ApplicationServiceToggle {
+@EqualsAndHashCode(of = "id")
+public class SystemToggle {
 
-    static final String TABLE_NAME = "service_toggles";
+    static final String TABLE_NAME = "system_toggles";
 
     @Id
     @Access(AccessType.PROPERTY)
@@ -33,12 +37,16 @@ public class ApplicationServiceToggle {
     private long id;
 
     @ManyToOne
-    @JoinColumn(name = "fk_service", foreignKey = @ForeignKey(name = "fk_service_toggles_service"), nullable = false)
-    private ApplicationService service;
+    @JoinColumn(name = "fk_system", foreignKey = @ForeignKey(name = "fk_system_toggles_system"), nullable = false)
+    private System system;
 
     @ManyToOne
-    @JoinColumn(name = "fk_toggle", foreignKey = @ForeignKey(name = "fk_service_toggles_toggle"), nullable = false)
+    @JoinColumn(name = "fk_toggle", foreignKey = @ForeignKey(name = "fk_system_toggles_toggle"), nullable = false)
     private Toggle toggle;
+
+    private boolean enabled;
+
+    private boolean allowed;
 
     @Version
     @Getter(AccessLevel.NONE)

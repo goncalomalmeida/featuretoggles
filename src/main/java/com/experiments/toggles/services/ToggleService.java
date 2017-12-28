@@ -12,17 +12,23 @@ import java.util.UUID;
 @Service
 public class ToggleService {
 
+    private final ToggleRepository toggleRepository;
+
     @Autowired
-    private ToggleRepository toggleRepository;
+    public ToggleService(ToggleRepository toggleRepository) {
+        this.toggleRepository = toggleRepository;
+    }
 
-    public Toggle addToggle() {
-
+    public Toggle create(String name, String description) {
         Toggle toggle = new Toggle();
         toggle.setId(UUID.randomUUID());
-        toggle.setName("randomName");
-        toggle.setDescription("randomDescription");
+        toggle.setName(name);
+        toggle.setDescription(description);
 
-        log.info("Creating toggle with id {}", toggle.getId());
+        log.info("Creating toggle with id '{}' name '{}' and description '{}'",
+                 toggle.getId(),
+                 toggle.getName(),
+                 toggle.getDescription());
 
         return toggleRepository.save(toggle);
     }
