@@ -6,17 +6,24 @@ import com.experiments.toggles.controllers.resources.SystemToggleResponse;
 import com.experiments.toggles.persistence.entities.System;
 import com.experiments.toggles.persistence.entities.SystemToggle;
 import com.experiments.toggles.persistence.entities.Toggle;
+import com.experiments.toggles.services.rabbit.RabbitService;
 import com.experiments.toggles.utilities.EntityFaker;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 public class SystemToggleControllerTest extends TogglesApplicationTests {
+
+    @SpyBean
+    private RabbitService rabbitService;
 
     @Test
     public void createSystemToggleReturns200AndPersistsData() throws Exception {
@@ -51,7 +58,7 @@ public class SystemToggleControllerTest extends TogglesApplicationTests {
         assertThat(systemToggleResponse.getToggle().getId()).isEqualTo(existingSystemToggle.getToggle().getId());
         assertThat(systemToggleResponse.getSystem().getId()).isEqualTo(existingSystemToggle.getSystem().getId());
 
-
+        Mockito.verify(rabbitService).send(any(), any(), any(), any());
     }
 
     @Test

@@ -1,4 +1,4 @@
-package com.experiments.toggles.services;
+package com.experiments.toggles.services.rabbit;
 
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
@@ -19,7 +19,7 @@ public class RabbitService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-    <T> void send(String exchange, String routingKey, T payload, Map<String, String> headers) {
+    public <T> void send(String exchange, String routingKey, T payload, Map<String, String> headers) {
         final Message message = rabbitTemplate.getMessageConverter().toMessage(payload, new MessageProperties());
         headers.forEach((k, v) -> message.getMessageProperties().setHeader(k, v));
 

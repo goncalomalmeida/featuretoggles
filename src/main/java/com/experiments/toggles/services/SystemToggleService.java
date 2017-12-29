@@ -7,22 +7,21 @@ import com.experiments.toggles.persistence.entities.Toggle;
 import com.experiments.toggles.persistence.repositories.SystemRepository;
 import com.experiments.toggles.persistence.repositories.SystemToggleRepository;
 import com.experiments.toggles.persistence.repositories.ToggleRepository;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.experiments.toggles.services.rabbit.RabbitService;
+import com.experiments.toggles.services.rabbit.resources.RabbitDTO;
 import com.google.common.collect.ImmutableMap;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -72,7 +71,7 @@ public class SystemToggleService {
                                                       "version", "V1",
                                                       "systemId", system.getId().toString());
 
-        SystemToggleDTO payload = SystemToggleDTO.from(systemToggle);
+        RabbitDTO.SystemToggleDTO payload = RabbitDTO.SystemToggleDTO.from(systemToggle);
         rabbitService.send(AmqpConfiguration.TOGGLE_EXCHANGE, routingKey, payload, headers);
 
         return systemToggleRepository.save(systemToggle);
@@ -86,97 +85,25 @@ public class SystemToggleService {
             throw new EntityNotFoundException("System " + systemUuid + " not found");
         }
 
-        return systemToggleRepository.findMyToggles(system);
-    }
+        final List<SystemToggle> systemToggles = new ArrayList<>(system.getSystemToggles());
 
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Data
-    @Builder(builderClassName = "Builder", toBuilder = true)
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    static class SystemToggleDTO implements Serializable {
+        final Set<Toggle> toggles = system
+                .getSystemToggles()
+                .stream()
+                .map(SystemToggle::getToggle)
+                .collect(Collectors.toSet());
 
-        private static final long serialVersionUID = 7807150122033510814L;
+        final List<SystemToggle> universalSystemToggles = systemToggleRepository.findAllByAllowedTrueAndSystemIsNull();
 
-        private ToggleDTO toggle;
-
-        private SystemDTO system;
-
-        private boolean enabled;
-
-        private boolean allowed;
-
-        static SystemToggleDTO from(SystemToggle systemToggle) {
-            if (systemToggle == null) {
-                return null;
+        universalSystemToggles.forEach(st -> {
+            if (!toggles.contains(st.getToggle())) {
+                systemToggles.add(st);
             }
+        });
 
-            return SystemToggleDTO.builder()
-                    .enabled(systemToggle.isEnabled())
-                    .allowed(systemToggle.isAllowed())
-                    .system(SystemDTO.from(systemToggle.getSystem()))
-                    .toggle(ToggleDTO.from(systemToggle.getToggle()))
-                    .build();
-        }
-
+        // at the end filter out all the 'not allowed'
+        return systemToggles.stream().filter(SystemToggle::isAllowed).collect(Collectors.toList());
     }
 
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Data
-    @Builder(builderClassName = "Builder", toBuilder = true)
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    static class ToggleDTO implements Serializable {
 
-        private static final long serialVersionUID = 1787378066559850569L;
-
-        private UUID id;
-
-        private String name;
-
-        private String description;
-
-        static ToggleDTO from(Toggle toggle) {
-            if (toggle == null) {
-                return null;
-            }
-
-            return ToggleDTO.builder()
-                    .description(toggle.getDescription())
-                    .id(toggle.getId())
-                    .name(toggle.getName())
-                    .build();
-        }
-    }
-
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Data
-    @Builder(builderClassName = "Builder", toBuilder = true)
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    static class SystemDTO implements Serializable {
-
-        private static final long serialVersionUID = -7083850718647058485L;
-
-        private UUID id;
-
-        private String name;
-
-        private String description;
-
-        private String systemVersion;
-
-        static SystemDTO from(System system) {
-            if (system == null) {
-                return null;
-            }
-
-            return SystemDTO.builder()
-                    .description(system.getDescription())
-                    .name(system.getName())
-                    .id(system.getId())
-                    .systemVersion(system.getSystemVersion())
-                    .build();
-        }
-    }
 }

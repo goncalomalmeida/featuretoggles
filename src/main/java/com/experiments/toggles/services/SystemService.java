@@ -27,7 +27,7 @@ public class SystemService {
         system.setName(name);
         system.setSystemVersion(version);
 
-        log.info("Creating toggle with id '{}' name '{}' and description '{}'",
+        log.info("Creating system with id '{}' name '{}' and description '{}'",
                  system.getId(),
                  system.getName(),
                  system.getDescription());
