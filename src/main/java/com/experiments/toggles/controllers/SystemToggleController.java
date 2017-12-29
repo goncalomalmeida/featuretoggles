@@ -28,7 +28,7 @@ public class SystemToggleController {
     @PutMapping
     public SystemToggleResponse create(@Valid @RequestBody SystemToggleRequest request) {
 
-        final UUID systemId = request.getSystem().map(UUID::fromString).orElse(null);
+        final UUID systemId = request.getSystemValue().map(UUID::fromString).orElse(null);
         final UUID toggleId = UUID.fromString(request.getToggle());
 
         final SystemToggle systemToggle = systemToggleService.create(systemId, toggleId, request.getEnabled(),

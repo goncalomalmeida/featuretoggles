@@ -14,7 +14,6 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -29,7 +28,7 @@ public class SystemControllerTest extends TogglesApplicationTests {
     @Test
     public void createSystemReturns201AndPersistsData() throws Exception {
 
-        System systemToCreate = EntityFaker.system();
+        System systemToCreate = EntityFaker.system().build();
         SystemRequest systemRequest = new SystemRequest();
         systemRequest.setDescription(systemToCreate.getDescription());
         systemRequest.setName(systemToCreate.getName());
@@ -58,7 +57,7 @@ public class SystemControllerTest extends TogglesApplicationTests {
     @Test
     public void createSystemWithEmptyNameReturnsBadRequest() throws Exception {
 
-        System systemToCreate = EntityFaker.system();
+        System systemToCreate = EntityFaker.system().build();
         SystemRequest systemRequest = new SystemRequest();
         systemRequest.setVersion(systemToCreate.getSystemVersion());
 
@@ -74,19 +73,19 @@ public class SystemControllerTest extends TogglesApplicationTests {
 
     @Test
     public void createWithoutAuthorizationTokenReturns401() throws Exception {
-        mockMvc.perform(get("/api/systems"))
+        mockMvc.perform(post("/api/systems"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void createWithInvalidAuthorizationTokenReturns401() throws Exception {
-        mockMvc.perform(get("/api/systems").with(httpBasic("dummy", "dummy")))
+        mockMvc.perform(post("/api/systems").with(httpBasic("dummy", "dummy")))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void createWithAuthorizationTokenButInsufficientPriviledgesReturns403() throws Exception {
-        mockMvc.perform(get("/api/systems").with(httpBasic("user", "password")))
+        mockMvc.perform(post("/api/systems").with(httpBasic("user", "password")))
                 .andExpect(status().isForbidden());
     }
 }

@@ -1,8 +1,11 @@
 package com.experiments.toggles.persistence.entities;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -27,6 +30,9 @@ import javax.persistence.Version;
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder(builderClassName = "Builder", toBuilder = true)
 public class SystemToggle {
 
     static final String TABLE_NAME = "system_toggles";
@@ -37,7 +43,7 @@ public class SystemToggle {
     private long id;
 
     @ManyToOne
-    @JoinColumn(name = "fk_system", foreignKey = @ForeignKey(name = "fk_system_toggles_system"), nullable = false)
+    @JoinColumn(name = "fk_system", foreignKey = @ForeignKey(name = "fk_system_toggles_system"))
     private System system;
 
     @ManyToOne

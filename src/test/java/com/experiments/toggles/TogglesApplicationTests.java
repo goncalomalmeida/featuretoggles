@@ -4,6 +4,10 @@ import com.experiments.toggles.controllers.SystemController;
 import com.experiments.toggles.controllers.SystemToggleController;
 import com.experiments.toggles.controllers.ToggleController;
 import com.experiments.toggles.persistence.repositories.GenericRepository;
+import com.experiments.toggles.persistence.repositories.SystemRepository;
+import com.experiments.toggles.persistence.repositories.SystemToggleRepository;
+import com.experiments.toggles.persistence.repositories.ToggleRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +40,18 @@ public class TogglesApplicationTests {
 
 	@Autowired
 	private List<GenericRepository> repositories;
+
+	@Autowired
+	protected ToggleRepository toggleRepository;
+
+	@Autowired
+	protected SystemRepository systemRepository;
+
+	@Autowired
+	protected SystemToggleRepository systemToggleRepository;
+
+	@Autowired
+	protected ObjectMapper objectMapper;
 
 	@Before
 	public void setUp() {

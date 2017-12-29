@@ -24,7 +24,7 @@ public class SystemToggleRequest implements Serializable {
     @NotNull
     private Boolean allowed;
 
-    public Optional<String> getSystem() {
+    public Optional<String> getSystemValue() {
         return Optional.ofNullable(system);
     }
 }

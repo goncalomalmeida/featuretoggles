@@ -5,14 +5,11 @@ import com.experiments.toggles.controllers.resources.SystemToggleResponse;
 import com.experiments.toggles.controllers.resources.ToggleRequest;
 import com.experiments.toggles.controllers.resources.ToggleResponse;
 import com.experiments.toggles.persistence.entities.System;
+import com.experiments.toggles.persistence.entities.SystemToggle;
 import com.experiments.toggles.persistence.entities.Toggle;
-import com.experiments.toggles.persistence.repositories.SystemRepository;
-import com.experiments.toggles.persistence.repositories.ToggleRepository;
 import com.experiments.toggles.utilities.EntityFaker;
 import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -27,19 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class ToggleControllerTest extends TogglesApplicationTests {
 
-    @Autowired
-    private ToggleRepository toggleRepository;
-
-    @Autowired
-    private SystemRepository systemRepository;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
     public void createToggleReturns201AndPersistsData() throws Exception {
 
-        Toggle toggleToCreate = EntityFaker.toggle();
+        Toggle toggleToCreate = EntityFaker.toggle().build();
         ToggleRequest toggleRequest = new ToggleRequest();
         toggleRequest.setDescription(toggleToCreate.getDescription());
         toggleRequest.setName(toggleToCreate.getName());
@@ -68,7 +56,7 @@ public class ToggleControllerTest extends TogglesApplicationTests {
     @Test
     public void createToggleWithEmptyNameReturnsBadRequest() throws Exception {
 
-        Toggle toggleToCreate = EntityFaker.toggle();
+        Toggle toggleToCreate = EntityFaker.toggle().build();
         ToggleRequest toggleRequest = new ToggleRequest();
         toggleRequest.setDescription(toggleToCreate.getDescription());
 
@@ -85,38 +73,92 @@ public class ToggleControllerTest extends TogglesApplicationTests {
     @Test
     public void listTogglesAllowedForAllSystemsReturnsEverything() throws Exception {
 
-//        final Toggle toggle = toggleRepository.save(EntityFaker.toggle());
+        // prepare data
+        final Toggle toggleForAllSystems = toggleRepository.save(EntityFaker.toggle().build());
+        final Toggle toggleForSystem = toggleRepository.save(EntityFaker.toggle().build());
+        final Toggle toggleForAnotherSystem = toggleRepository.save(EntityFaker.toggle().build());
 
-        final System system = systemRepository.save(EntityFaker.system());
+        final System anotherSystem = systemRepository.save(EntityFaker.system().build());
 
-        final MockHttpServletResponse response = mockMvc.perform(get("/api/toggles")
-                                                                         .with(httpBasic("admin", "admin"))
-                                                                         .header(ToggleController.SYSTEM_ID_HEADER,
-                                                                                 system.getId().toString())
-                                                                         .header(ToggleController.SYSTEM_VERSION_HEADER,
-                                                                                 system.getSystemVersion()))
-                .andDo(print())
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse();
+        final System system = systemRepository.save(EntityFaker.system().build());
 
-        JavaType type = objectMapper
-                .getTypeFactory()
-                .constructParametrizedType(List.class, List.class, SystemToggleResponse.class);
-        List<SystemToggleResponse> systemToggles = objectMapper.readValue(response.getContentAsByteArray(), type);
+        // associate the first toggle to 'all systems'
+        final SystemToggle systemToggleAllSystems = systemToggleRepository.save(
+                EntityFaker.systemToggle(null, toggleForAllSystems).allowed(true).build());
 
-        assertThat(systemToggles).isNotNull();
+        // associate the second toggle to 'system'
+        final SystemToggle systemToggleSpecificForSystem = systemToggleRepository.save(
+                EntityFaker.systemToggle(system, toggleForSystem).allowed(true).build());
+
+        // associate the third toggle to 'another system'
+        systemToggleRepository.save(
+                EntityFaker.systemToggle(anotherSystem, toggleForAnotherSystem).allowed(true).build());
+
+        // ask for available toggles for 'system'
+        List<SystemToggleResponse> systemToggles = getMyToggles(system);
+
+        assertThat(systemToggles)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .extracting(SystemToggleResponse::getToggle)
+                .extracting(ToggleResponse::getId)
+                .containsExactly(toggleForAllSystems.getId(), toggleForSystem.getId())
+                .doesNotContain(toggleForAnotherSystem.getId());
+
+        assertThat(systemToggles)
+                .extracting(SystemToggleResponse::isEnabled)
+                .containsExactly(systemToggleAllSystems.isEnabled(), systemToggleSpecificForSystem.isEnabled());
     }
 
     @Test
-    public void listTogglesAllowedForSpecificSystemReturnsThemPlusTheOnesAllowedForAllSystems() throws Exception {
+    public void listTogglesAllowedForSpecificSystemAndAllSystemsReturnsReturnsTheSpecificOneOnly() throws
+                                                                                                   Exception {
+        // prepare data
+        final Toggle toggle1 = toggleRepository.save(EntityFaker.toggle().build());
+        final Toggle toggle2 = toggleRepository.save(EntityFaker.toggle().build());
 
+        final System system = systemRepository.save(EntityFaker.system().build());
+
+        // associate the first toggle to 'all systems'
+        systemToggleRepository.save(EntityFaker.systemToggle(null, toggle1).allowed(true).enabled(true).build());
+        systemToggleRepository.save(EntityFaker.systemToggle(null, toggle2).allowed(true).enabled(false).build());
+
+        // associate the second toggle to 'system'
+        systemToggleRepository.save(EntityFaker.systemToggle(system, toggle1).allowed(true).enabled(false).build());
+        systemToggleRepository.save(EntityFaker.systemToggle(system, toggle2).allowed(true).enabled(true).build());
+
+        // ask for available toggles for 'system'
+        List<SystemToggleResponse> systemToggles = getMyToggles(system);
+
+        // the list should only have two elements (the specific toggles instead of the generic one)
+        assertThat(systemToggles)
+                .isNotNull()
+                .isNotEmpty()
+                .hasSize(2)
+                .extracting(SystemToggleResponse::isEnabled)
+                .containsExactly(false, true);
     }
 
     @Test
     public void listTogglesNotAllowedForSpecificSystemAndAllowedForAllTheOtherOnesDoesntReturnAnything() throws
                                                                                                          Exception {
+        final Toggle toggle = toggleRepository.save(EntityFaker.toggle().build());
 
+        final System system = systemRepository.save(EntityFaker.system().build());
+
+        // associate the first toggle to 'all systems'
+        systemToggleRepository.save(EntityFaker.systemToggle(null, toggle).allowed(true).enabled(true).build());
+
+        // associate the second toggle to 'system'
+        systemToggleRepository.save(EntityFaker.systemToggle(system, toggle).allowed(false).enabled(false).build());
+
+        // ask for available toggles for 'system'
+        List<SystemToggleResponse> systemToggles = getMyToggles(system);
+
+        assertThat(systemToggles)
+                .isNotNull()
+                .isEmpty();
     }
 
     @Test
@@ -132,9 +174,28 @@ public class ToggleControllerTest extends TogglesApplicationTests {
     }
 
     @Test
-    public void listWithAuthorizationTokenButInsufficientPriviledgesReturns403() throws Exception {
+    public void listWithAuthorizationTokenButInsufficientPrivilegesReturns403() throws Exception {
         mockMvc.perform(get("/api/toggles").with(httpBasic("user", "password")))
                 .andExpect(status().isForbidden());
     }
 
+
+    private List<SystemToggleResponse> getMyToggles(System system) throws Exception {
+        final MockHttpServletResponse response = mockMvc.perform(
+                get("/api/toggles")
+                        .with(httpBasic("admin", "admin"))
+                        .header(ToggleController.SYSTEM_ID_HEADER,
+                                system.getId().toString())
+                        .header(ToggleController.SYSTEM_VERSION_HEADER,
+                                system.getSystemVersion()))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse();
+
+        JavaType type = objectMapper
+                .getTypeFactory()
+                .constructParametrizedType(List.class, List.class, SystemToggleResponse.class);
+        return objectMapper.readValue(response.getContentAsByteArray(), type);
+    }
 }
