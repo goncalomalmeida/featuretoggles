@@ -103,12 +103,13 @@ public class ToggleControllerTest extends TogglesApplicationTests {
                 .hasSize(2)
                 .extracting(SystemToggleResponse::getToggle)
                 .extracting(ToggleResponse::getId)
-                .containsExactly(toggleForAllSystems.getId(), toggleForSystem.getId())
+                .containsExactlyInAnyOrder(toggleForAllSystems.getId(), toggleForSystem.getId())
                 .doesNotContain(toggleForAnotherSystem.getId());
 
         assertThat(systemToggles)
                 .extracting(SystemToggleResponse::isEnabled)
-                .containsExactly(systemToggleAllSystems.isEnabled(), systemToggleSpecificForSystem.isEnabled());
+                .containsExactlyInAnyOrder(systemToggleAllSystems.isEnabled(),
+                                           systemToggleSpecificForSystem.isEnabled());
     }
 
     @Test

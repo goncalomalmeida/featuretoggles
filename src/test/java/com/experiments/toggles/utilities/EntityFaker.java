@@ -19,7 +19,7 @@ public final class EntityFaker {
         return Toggle
                 .builder()
                 .description(faker.lorem().sentence())
-                .name(faker.superhero().name())
+                .name(faker.superhero().name() + "_" + faker.superhero().name())
                 .id(UUID.randomUUID());
     }
 
@@ -27,7 +27,7 @@ public final class EntityFaker {
         return System
                 .builder()
                 .id(UUID.randomUUID())
-                .name(faker.app().name())
+                .name(faker.app().name() + "_" + faker.app().name())
                 .systemVersion(faker.app().version())
                 .description(faker.lorem().sentence());
     }
