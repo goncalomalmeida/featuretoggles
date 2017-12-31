@@ -19,6 +19,14 @@ public class ToggleService {
         this.toggleRepository = toggleRepository;
     }
 
+    /**
+     * Create a new {@link Toggle} using the provided inputs.
+     * Generates a {@link UUID} for it before persisting.
+     *
+     * @param name        the toggle name
+     * @param description the toggle description
+     * @return the newly created {@link Toggle}
+     */
     public Toggle create(String name, String description) {
         Toggle toggle = new Toggle();
         toggle.setId(UUID.randomUUID());

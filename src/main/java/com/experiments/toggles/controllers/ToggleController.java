@@ -1,9 +1,9 @@
 package com.experiments.toggles.controllers;
 
 import com.experiments.toggles.controllers.resources.SystemToggleResponse;
-import com.experiments.toggles.controllers.resources.transformers.SystemToggleTransformer;
 import com.experiments.toggles.controllers.resources.ToggleRequest;
 import com.experiments.toggles.controllers.resources.ToggleResponse;
+import com.experiments.toggles.controllers.resources.transformers.SystemToggleTransformer;
 import com.experiments.toggles.controllers.resources.transformers.ToggleTransformer;
 import com.experiments.toggles.persistence.entities.SystemToggle;
 import com.experiments.toggles.persistence.entities.Toggle;
@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * This controller exposes endpoints to manage {@link Toggle}s
+ */
 @RestController
 @RequestMapping("/api/toggles")
 public class ToggleController {
@@ -43,6 +46,12 @@ public class ToggleController {
         this.systemToggleService = systemToggleService;
     }
 
+    /**
+     * Creates a toggle using the body input and returns a HttpStatus.CREATED on success.
+     *
+     * @param request a DTO containing the necessary inputs for creating a {@link Toggle}
+     * @return a DTO representing the newly created toggle
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ToggleResponse create(@Valid @RequestBody ToggleRequest request) {
@@ -52,6 +61,18 @@ public class ToggleController {
         return ToggleTransformer.transform(toggle);
     }
 
+    /**
+     * Returns a list of all the toggles that are available for the calling client.
+     * The client is identified using the following headers:
+     * <ul>
+     * <li>X-SystemId</li>
+     * <li>X-SystemVersion</li>
+     * </ul>
+     *
+     * @param systemId identifies the system
+     * @param version  identifies the system's version
+     * @return a list of available toggles for the calling system
+     */
     @GetMapping
     public List<SystemToggleResponse> list(@NotBlank @RequestHeader(value = SYSTEM_ID_HEADER) String systemId,
                                            @NotBlank @RequestHeader(value = SYSTEM_VERSION_HEADER) String version) {

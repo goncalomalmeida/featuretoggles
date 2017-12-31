@@ -46,6 +46,17 @@ public class SystemToggleService {
         this.rabbitService = rabbitService;
     }
 
+    /**
+     * Associates a toggle to a system.
+     *
+     * @param systemId the system id that is being associated. If null it means that this toggle is universally
+     *                 available to all systems.
+     * @param toggleId the toggle id that is being associated
+     * @param enabled  indicates if the toggle is enabled (true) or not (false)
+     * @param allowed  if true the association will be white-listed and returned when asked, if false the association
+     *                 will be black-listed and excluded when asked
+     * @return the newly created association between a system and a toggle
+     */
     public SystemToggle create(UUID systemId, UUID toggleId, boolean enabled, boolean allowed) {
 
         final System system = systemRepository.findOne(systemId);
@@ -58,6 +69,10 @@ public class SystemToggleService {
         systemToggle.setAllowed(allowed);
 
         log.info("Associating toggle with id {} to system id {}", toggleId, systemId);
+
+        final SystemToggle persistedSystemToggle = systemToggleRepository.save(systemToggle);
+
+        log.info("Building a message to publish to RabbitMQ");
 
         // the system id is part of the routing key
         String routingKey = "toggles.service" + Optional
@@ -72,19 +87,31 @@ public class SystemToggleService {
                                                       "systemId", system.getId().toString());
 
         RabbitDTO.SystemToggleDTO payload = RabbitDTO.SystemToggleDTO.from(systemToggle);
+
+        // delegate the publishing to RabbitService.send
         rabbitService.send(AmqpConfiguration.TOGGLE_EXCHANGE, routingKey, payload, headers);
 
-        return systemToggleRepository.save(systemToggle);
+        return persistedSystemToggle;
     }
 
-    public List<SystemToggle> list(UUID systemUuid, String version) {
+    /**
+     * Fetches all toggle for a given system/version.
+     * It merges the toggles directly associated to this system and the universally available toggles. The former is
+     * always more important than the latter
+     *
+     * @param systemId system identifier
+     * @param version  system version
+     * @return a list of {@link SystemToggle} that are available for the calling system
+     */
+    public List<SystemToggle> list(UUID systemId, String version) {
 
-        final System system = systemRepository.findByIdAndSystemVersion(systemUuid, version);
+        final System system = systemRepository.findByIdAndSystemVersion(systemId, version);
 
         if (system == null) {
-            throw new EntityNotFoundException("System " + systemUuid + " not found");
+            throw new EntityNotFoundException("System " + systemId + " not found");
         }
 
+        // fetch the toggles directly associated to this system
         final List<SystemToggle> systemToggles = new ArrayList<>(system.getSystemToggles());
 
         final Set<Toggle> toggles = system
@@ -93,8 +120,10 @@ public class SystemToggleService {
                 .map(SystemToggle::getToggle)
                 .collect(Collectors.toSet());
 
+        // fetch all the universally white-listed toggles
         final List<SystemToggle> universalSystemToggles = systemToggleRepository.findAllByAllowedTrueAndSystemIsNull();
 
+        // merge the two lists, prioritizing the toggles that are directly associated
         universalSystemToggles.forEach(st -> {
             if (!toggles.contains(st.getToggle())) {
                 systemToggles.add(st);

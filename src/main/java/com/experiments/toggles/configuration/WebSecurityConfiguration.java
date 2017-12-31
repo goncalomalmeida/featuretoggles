@@ -11,8 +11,11 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @EnableWebSecurity
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+
+        // protect all requests with an authenticated ADMIN user
         http
             .authorizeRequests()
                 .anyRequest().hasRole(Roles.ADMIN.name()).and()
@@ -25,6 +28,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
+
+        // in-memory users can easily be replaced by a jdbc source or other
         auth
             .inMemoryAuthentication()
                 .withUser("admin").password("admin").roles(Roles.ADMIN.name());

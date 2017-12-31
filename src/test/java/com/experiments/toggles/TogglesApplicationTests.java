@@ -26,44 +26,47 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureMockMvc
 public class TogglesApplicationTests {
 
-	@Autowired
-	private ToggleController toggleController;
+    @Autowired
+    private ToggleController toggleController;
 
-	@Autowired
-	private SystemController systemController;
+    @Autowired
+    private SystemController systemController;
 
-	@Autowired
-	private SystemToggleController systemToggleController;
+    @Autowired
+    private SystemToggleController systemToggleController;
 
-	@Autowired
-	protected MockMvc mockMvc;
+    @Autowired
+    protected MockMvc mockMvc;
 
-	@Autowired
-	private List<GenericRepository> repositories;
+    @Autowired
+    private List<GenericRepository> repositories;
 
-	@Autowired
-	protected ToggleRepository toggleRepository;
+    @Autowired
+    protected ToggleRepository toggleRepository;
 
-	@Autowired
-	protected SystemRepository systemRepository;
+    @Autowired
+    protected SystemRepository systemRepository;
 
-	@Autowired
-	protected SystemToggleRepository systemToggleRepository;
+    @Autowired
+    protected SystemToggleRepository systemToggleRepository;
 
-	@Autowired
-	protected ObjectMapper objectMapper;
+    @Autowired
+    protected ObjectMapper objectMapper;
 
-	@Before
-	public void setUp() {
-		repositories.forEach(r -> r.delete(r.findAll()));
-	}
+    /**
+     * Deletes all data from the <i>test</i> database before executing each test
+     */
+    @Before
+    public void setUp() {
+        repositories.forEach(r -> r.delete(r.findAll()));
+    }
 
-	@Test
-	public void contextLoads() {
+    @Test
+    public void contextLoads() {
 
-		assertThat(toggleController).isNotNull();
-		assertThat(systemController).isNotNull();
-		assertThat(systemToggleController).isNotNull();
-	}
+        assertThat(toggleController).isNotNull();
+        assertThat(systemController).isNotNull();
+        assertThat(systemToggleController).isNotNull();
+    }
 
 }

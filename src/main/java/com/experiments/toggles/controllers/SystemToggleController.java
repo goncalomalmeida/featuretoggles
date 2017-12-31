@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import java.util.UUID;
 
+/**
+ * This controller exposes endpoints to manage {@link SystemToggle}s
+ */
 @RestController
 @RequestMapping("/api/systems/toggles")
 public class SystemToggleController {
@@ -25,6 +28,14 @@ public class SystemToggleController {
         this.systemToggleService = systemToggleService;
     }
 
+    /**
+     * Creates a system toggle using the body input and returns a HttpStatus.OK on success.
+     * <p>
+     * PUT is an idempotent operation so calling it several times should always produce the same result.
+     *
+     * @param request a DTO containing the necessary inputs for creating a {@link SystemToggle}
+     * @return a DTO representing the newly created system toggle
+     */
     @PutMapping
     public SystemToggleResponse create(@Valid @RequestBody SystemToggleRequest request) {
 

@@ -19,6 +19,15 @@ public class SystemService {
         this.systemRepository = systemRepository;
     }
 
+    /**
+     * Create a new {@link System} using the provided inputs.
+     * Generates a {@link UUID} for it before persisting.
+     *
+     * @param name        the system name
+     * @param description the system description
+     * @param version     the system version
+     * @return the newly created {@link System}
+     */
     public System create(String name, String description, String version) {
 
         System system = new System();

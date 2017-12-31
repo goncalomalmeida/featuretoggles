@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 
+/**
+ * This controller exposes endpoints to manage {@link System}s
+ */
 @RestController
 @RequestMapping("/api/systems")
 public class SystemController {
@@ -26,6 +29,12 @@ public class SystemController {
         this.systemService = systemService;
     }
 
+    /**
+     * Creates a system using the body input and returns a HttpStatus.CREATED on success.
+     *
+     * @param request a DTO containing the necessary inputs for creating a {@link System}
+     * @return a DTO representing the newly created system
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SystemResponse create(@Valid @RequestBody SystemRequest request) {

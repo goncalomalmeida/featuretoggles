@@ -12,6 +12,16 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.UUID;
 
+/**
+ * Holds a few DTOs representing the information that we want to publish on RabbitMQ. It could be merged with the
+ * REST DTOs if the project requires to be the same at all times.
+ * <p>
+ * The {@link SystemToggleDTO} is the top level class, containing both:
+ * <ul>
+ * <li>{@link ToggleDTO}</li>
+ * <li>{@link SystemDTO}</li>
+ * </ul>
+ */
 public final class RabbitDTO {
 
     private RabbitDTO() {
