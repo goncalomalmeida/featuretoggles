@@ -62,9 +62,14 @@ public class SystemToggleService {
         final System system = systemRepository.findOne(systemId);
         final Toggle toggle = toggleRepository.findOne(toggleId);
 
-        SystemToggle systemToggle = new SystemToggle();
-        systemToggle.setSystem(system);
-        systemToggle.setToggle(toggle);
+        SystemToggle systemToggle = systemToggleRepository.findBySystemIdAndToggleId(systemId, toggleId);
+
+        if (systemToggle == null) {
+            systemToggle = new SystemToggle();
+            systemToggle.setSystem(system);
+            systemToggle.setToggle(toggle);
+        }
+
         systemToggle.setEnabled(enabled);
         systemToggle.setAllowed(allowed);
 
